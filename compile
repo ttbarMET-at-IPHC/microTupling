@@ -1,0 +1,188 @@
+#!/bin/bash
+
+#Variables
+#NTUPLEANA_PATH=$CMSSW_BASE/src/NTuple/NTupleAnalysis/macros
+recompile=false;
+execute=false;
+execFile="";
+src="";
+
+Help(){
+	echo "./compile [options] filename.C(or .cc)"
+	echo "options:"
+	echo " -r : recompile the library liNTupleAna.so"
+	echo " -rf : do a make clean & recompile the library liNTupleAna.so"
+	echo " -e : execute the code"
+}
+
+Clean(){
+	cd ../../../;
+	make clean;
+	cd -;
+}
+
+Recompile(){
+	cd ../../../;
+	make all;
+	code=$?
+	cd -;
+	return $code;
+}
+
+############################################################
+##   Functions needed to deal with multiple librairies
+############################################################
+
+# The function will write the list in .list_lib_ordered
+ListOfLibUsedByCurrentProcess(){
+uname=`whoami`
+ps -f -u $uname | awk '{print $2}' > .list_processes
+rm .list_lib
+for i in `cat .list_processes`;
+do
+	if [[ -e /proc/$i/maps ]]; then
+		grep libNTupleAna /proc/$i/maps | awk '{print $6}' >> .list_lib
+		grep libNTuple /proc/$i/maps | awk '{print $6}' >> .list_lib
+	fi
+done
+sort -u .list_lib > .list_lib_ordered
+}
+
+#The function will write the list of current available lib in .list_available_lib
+ListOfAvailableLib(){
+	ls -ltrh ../../../.lib/ | awk '{print $9}' > .list_available_lib	
+}
+
+LatestLib(){
+	ListOfAvailableLib;
+	string=`tail -1 .list_available_lib`	
+	echo $string
+}
+
+RemoveUselessLib(){
+	ListOfLibUsedByCurrentProcess;
+	ListOfAvailableLib;
+	#remove the link to the latest one
+	rm -f ../../../.lib/libNTupleAna.so
+	CurrLib=$NTUPLEANA_PATH"/../lib/"`LatestLib`
+	for i in `cat .list_available_lib`; do 
+		bit=`grep $i .list_lib_ordered`
+		if [[ $bit == "" ]]; then
+			if [[ $i != $CurrLib ]];then
+				echo rm ../../../.lib/$i
+				rm ../../../.lib/$i
+			fi
+		fi
+	done
+}
+
+############################################################
+
+
+if [ $# -lt 1 ] ; then echo "No arguments given" ; Help ; exit ; fi
+
+#echo "###############################"
+#echo " 		COMPILE		     "
+#echo "###############################"
+
+#echo "The path has been defined as: "$NTUPLEANA_PATH
+
+if [[ $NTUPLEANA_PATH == "" ]]; then
+ 	exit
+fi
+
+#LOOP OVER ARGUMENTS
+for i in $*
+do
+	if [[ $i == "-help" ]] ; then echo "HELP" ; Help ; fi
+	if [[ $i == "-r" ]] ; then 
+                                #echo "Option -r : recompile the library libNTupleAna.so" ; 
+                                recompile=true; 
+                           fi
+	if [[ $i == "-rf" ]] ; then 
+                                #echo "Option -rf : make clean + recompile the library libNTupleAna.so" ; 
+                                Clean ; 
+                                recompile=true; 
+                                fi
+	if [[ $i == "-e" ]] ; then 
+                                #echo "Option -e : execute the code" ; 
+                                execute=true; 
+                          fi
+	if [[ $i == *.C ]] ; then 
+                                #echo "Will compile the file " $i  ; 
+                                src=$i ; 
+                         fi
+	if [[ $i == *.cc ]] ; then 
+                                #echo "Will compile the file " $i  ; 
+                                src=$i ; 
+                          fi
+done 
+
+#ACTIONS
+if [[ $recompile == "true" ]] ; then 
+	#echo "###############################"
+	echo "  "
+	echo "  ,----------------------------------,"
+    echo "  |   Recompiling analysis package   |"
+	echo "  \`----------------------------------\`"
+	#echo "###############################"
+    
+    echo " "
+    echo "  > Remove useless librairies ..."
+    echo " "
+	RemoveUselessLib;
+    echo " "
+	echo "  > Recompile ..."
+    echo " "
+	Recompile ;
+
+	code=$?
+	#Keep a link to the latest one
+	latest=`ls -ltrh ../../../.lib/ | tail -1 | awk '{print $9}'`
+	ln -s ../../.lib/$latest ../../../.lib/libNTupleAna.so
+
+	#echo "###############################"
+    echo " "
+	if [ $code -eq 0 ] ; then
+  		echo "  > Compilation worked !"
+	else
+   		echo "  > Compilation failed :("
+		exit;
+	fi
+    echo " "
+	#echo "###############################"
+fi
+
+if [[ $src != "" ]] ; then 
+	#echo "###############################"
+	echo "  ,---------------------,"
+    echo "  |   Compiling macro   |"
+	echo "  \`---------------------\`"
+	echo "  "
+	#echo "###############################"
+	execFile=`echo $src | awk -F '.' '{print $1}'`
+	CurrLib=`LatestLib`
+        echo $NTUPLEANA_PATH
+	g++  -l:$NTUPLEANA_PATH/../../../IPHCDataFormat/NTFormat/src/libNTuple.so -l:$NTUPLEANA_PATH/../libNTupleAna.so -I `root-config --incdir` -I $NTUPLEANA_PATH/../ -I ../sonicScrewdriver -l:$PWD/../sonicScrewdriver/libSonicScrewdriver.so -I $NTUPLEANA_PATH/../../../IPHCDataFormat/ -L $ROOTSYS/lib -lGenVector -lCore -lCint -lRIO -lNet -lHist -lGraf -lGraf3d -lGpad -lTree -lRint -lPostscript -lMatrix -lPhysics -lMathCore -lThread -pthread -lm -ldl -rdynamic -lProof -lProofPlayer -lMinuit -lMinuit2 $src -o $execFile
+	#g++  -l:$NTUPLEANA_PATH/../../../IPHCDataFormat/NTFormat/src/libNTuple.so -l:$NTUPLEANA_PATH/../libNTupleAna.so -I `root-config --incdir` -I $NTUPLEANA_PATH/../ -I $NTUPLEANA_PATH/../../../IPHCDataFormat/ -L $ROOTSYS/lib -lGenVector -lCore -lCint -lRIO -lNet -lHist -lGraf -lGraf3d -lGpad -lTree -lRint -lPostscript -lMatrix -lPhysics -lMathCore -lThread -pthread -lm -ldl -rdynamic -lProof -lProofPlayer $src -o $execFile
+ 	code=$?
+	#echo "###############################"
+    echo " "
+	if [ $code -eq 0 ] ; then
+  		echo "  > Compilation worked !"
+	else
+   		echo "  > Compilation failed :("
+		exit;
+	fi
+    echo " "
+	#echo "###############################"
+    echo " "
+	if [[ $execute == "true" ]] ; then 
+		#echo "###############################"
+		echo "  ,---------------------,"
+        echo "  |   Executing macro   |"
+		echo "  \`---------------------\`"
+		#echo "###############################"
+		./$execFile
+	fi
+fi
