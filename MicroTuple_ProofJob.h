@@ -90,10 +90,10 @@ class MicroTuple_ProofJob : public TSelector {
   StopMCinfo* stopMCinfo;
 
 	TTree* theTree;
-	TTree* theTree2;
+//	TTree* theTree2;
 
 	microEvent  myEvent;
-	signalPoint mySignalPoint;
+//	signalPoint mySignalPoint;
 
   //------------------------------------
   //definition of member functions

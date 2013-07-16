@@ -63,7 +63,7 @@ typedef struct
 //                       ############################################
 #define MICROEVENT_FORMATROOT "trueNumberOfEvents:nJets:nBtags:jet_pT[10]:jet_eta[10]:jet_phi[10]:jet_bTag[10]:lep_pT:lep_eta:lep_phi:lep_flavor:MET:MT:HadronicChi2:MT2W:DPhi_MetJets:isolatedTrackVeto:tauVeto:mStop:mNeutralino:genW_pT:genW_Eta:genW_Phi:recoW_pT[10]:recoW_Eta[10]:recoW_Phi[10]:recoW_Mass[10]"
 
-
+/*
 typedef struct
 {
 
@@ -73,7 +73,7 @@ typedef struct
 } signalPoint;
 
 #define SIGNALPOINT_FORMATROOT "mStop:mNeutralino"
-
+*/
 #endif
 
 
@@ -102,6 +102,8 @@ Bool_t MicroTuple_ProofJob::Process(Long64_t entry)
   // #######################################################
 
     IPHCTree::NTMonteCarlo mcInfo = *((sel).GetPointer2MC());    
+
+    
     if (dataset->Name() == "signal") 
     {
         int TMEME = mcInfo.TMEME; 
@@ -116,11 +118,12 @@ Bool_t MicroTuple_ProofJob::Process(Long64_t entry)
         else
         {
            stopMCinfo->LoadEvent(event);
-           mySignalPoint.mStop       = stopMCinfo->GetStopMass();
-           mySignalPoint.mNeutralino = stopMCinfo->GetNeutralinoMass();
-           theTree2->Fill();
+           //mySignalPoint.mStop       = stopMCinfo->GetStopMass();
+           //mySignalPoint.mNeutralino = stopMCinfo->GetNeutralinoMass();
+           //theTree2->Fill();
         }
     }
+    
 
   // ######################
   // #  Apply selection   #

@@ -9,7 +9,7 @@
 #define MACRO_NAME "MicroTuple_ProofJob.C+"
 
 // XML configuration to load
-#define XML_CONFIG "macros/TTbarMET/config.xml"
+#define XML_CONFIG "macros/TTbarMET/microTupling/config.xml"
 
 // Sandbox for PROOF
 #define OUTPUT_BOX "/opt/sbg/data/data4/cms/aaubin/proofBox/"

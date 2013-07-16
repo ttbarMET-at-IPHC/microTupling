@@ -24,7 +24,7 @@ MicroTuple_ProofJob::MicroTuple_ProofJob()
   DataType   = 0;
   Luminosity = 0; 
   theTree    = 0;
-  theTree2   = 0;
+  //theTree2   = 0;
   fFile      = 0;
   fProofFile = 0;
   stopMCinfo = new StopMCinfo();
@@ -101,9 +101,9 @@ void MicroTuple_ProofJob::SlaveBegin(TTree * /*tree*/)
     theTree->SetDirectory(fFile);
     theTree->Branch("microEvents",&myEvent,MICROEVENT_FORMATROOT);
   
-    theTree2=new TTree("signalInitialNumberOfEvents","signalInitialNumberOfEvents");
-    theTree2->SetDirectory(fFile);
-    theTree2->Branch("signalPoint",&mySignalPoint,SIGNALPOINT_FORMATROOT);
+//    theTree2=new TTree("signalInitialNumberOfEvents","signalInitialNumberOfEvents");
+//    theTree2->SetDirectory(fFile);
+//    theTree2->Branch("signalPoint",&mySignalPoint,SIGNALPOINT_FORMATROOT);
 }
 
 //_____________________________________________________________________________
@@ -117,8 +117,8 @@ void MicroTuple_ProofJob::SlaveTerminate()
     theTree->Print();
     theTree->Write(0, TObject::kOverwrite); 
 
-    theTree2->Print();
-    theTree2->Write(0, TObject::kOverwrite); 
+    //theTree2->Print();
+    //theTree2->Write(0, TObject::kOverwrite); 
 
     fProofFile->Print();
     fOutput->Add(fProofFile);

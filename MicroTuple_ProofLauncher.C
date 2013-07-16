@@ -35,7 +35,7 @@ int main(int argc, char* argv[])
   // ###########################
  
   // Cleaning proof stuff
-  system("../GeneralExamples/./clean_proof.sh ; echo 'Cleaning proof stuff ... ' ; sleep 6");
+  system("../../GeneralExamples/./clean_proof.sh ; echo 'Cleaning proof stuff ... ' ; sleep 6");
   system((string("rm -r ")+OUTPUT_BOX).c_str());  
 
   TProof *proof = TProof::Open("");
@@ -45,8 +45,8 @@ int main(int argc, char* argv[])
   // #   Loading packages   #
   // ########################
  
-  cout<<"   > Loading NTuple Analysis package (don't worry about the symlink error)";
-  proof->UploadPackage("../NTAna.par");
+  cout<<"   > Loading NTuple Analysis package (don't worry about the symlink error)" << endl;
+  proof->UploadPackage("../../NTAna.par");
   proof->EnablePackage("NTAna");
   
   // ##############################
