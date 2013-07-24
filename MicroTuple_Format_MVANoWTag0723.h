@@ -51,6 +51,7 @@ Bool_t MicroTuple_ProofJob::Process(Long64_t entry)
     IPHCTree::NTTransient::InitializeAfterReading(event);
     sel.LoadEvent(event);
 
+    IPHCTree::NTMonteCarlo mcInfo = *((sel).GetPointer2MC());    
     int TMEME = mcInfo.TMEME; 
     int  MEME = TMEME % 10000; 
     int   EME =  MEME % 1000; 
@@ -78,7 +79,7 @@ Bool_t MicroTuple_ProofJob::Process(Long64_t entry)
         myEvent.mStop       = stopMCinfo->GetStopMass();
         myEvent.mNeutralino = stopMCinfo->GetNeutralinoMass();
         if (myEvent.mStop - myEvent.mNeutralino < 500) return false;
-        myEvent.weight      = stopCrossSection(mStop) * 20000 / 54000;
+        myEvent.weight      = stopCrossSection(myEvent.mStop) * 20000 / 54000;
     }
     else
     {
@@ -91,8 +92,6 @@ Bool_t MicroTuple_ProofJob::Process(Long64_t entry)
         else if  (dataset->Name() == "W3Jets")    myEvent.weight = 640   * 20000 / 15539503;
         else if  (dataset->Name() == "W4Jets")    myEvent.weight = 264   * 20000 / 13382803;
     }
-
-    myEvent.nMCLepton = nMCLepton;
 
     // ####################
     // #  Fill jets info  #
