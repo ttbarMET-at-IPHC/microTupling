@@ -12,12 +12,16 @@ typedef struct
     Float_t mNeutralino;
     
     Float_t nJets;
+    Float_t nBTag;
+    Float_t nWTag;
+
     Float_t MT;
 
     Float_t MET;
     Float_t MT2W;
     Float_t dPhiMETjet;
     Float_t HTratio;
+    Float_t HadronicChi2;
     
     Float_t weight;
     
@@ -26,7 +30,7 @@ typedef struct
 //                       ############################################
 //                       #            Keep me updated !             #
 //                       ############################################
-#define MICROEVENT_FORMATROOT "mStop:mNeutralino:nJets:MT:MET:MT2W:dPhiMETjet:HTratio:weight"
+#define MICROEVENT_FORMATROOT "mStop:mNeutralino:nJets:nBTag:nWTag:MT:MET:MT2W:dPhiMETjet:HTratio:HadronicChi2:weight"
 
 #endif
 
@@ -86,11 +90,10 @@ Bool_t MicroTuple_ProofJob::Process(Long64_t entry)
         myEvent.mStop       = -1;
         myEvent.mNeutralino = -1;
         
-             if ((dataset->Name() == "ttbar-v1") 
-              || (dataset->Name() == "ttbar-v2")) myEvent.weight = 225.2 * 20000.0 / (21675970.0 + 6474753.0);
-        else if  (dataset->Name() == "W2Jets")    myEvent.weight = 2159.0  * 20000.0 / 34044921.0;
-        else if  (dataset->Name() == "W3Jets")    myEvent.weight = 640.0   * 20000.0 / 15539503.0;
-        else if  (dataset->Name() == "W4Jets")    myEvent.weight = 264.0   * 20000.0 / 13382803.0;
+             if (dataset->Name() == "ttbar")  myEvent.weight = 225.2 * 20000.0 / (21675970.0 + 6474753.0);
+        else if (dataset->Name() == "W2Jets") myEvent.weight = 2159.0  * 20000.0 / 34044921.0;
+        else if (dataset->Name() == "W3Jets") myEvent.weight = 640.0   * 20000.0 / 15539503.0;
+        else if (dataset->Name() == "W4Jets") myEvent.weight = 264.0   * 20000.0 / 13382803.0;
     }
 
     // ####################
@@ -98,13 +101,61 @@ Bool_t MicroTuple_ProofJob::Process(Long64_t entry)
     // ####################
 
     myEvent.nJets        = sel.GetJetsForAna().size();
+    myEvent.nBTag        = sel.GetBJetsForAna().size();
     myEvent.MT           = sel.MT_wleptonic();
 
     myEvent.MET          = sel.Met();
     myEvent.MT2W         = sel.MT2W();
     myEvent.dPhiMETjet   = sel.DPhi_MET_leadingJets(); 
     myEvent.HTratio      = sel.HT_ratio();
-          
+    myEvent.HadronicChi2 = sel.HadronicChi2();
+
+    // ####################
+    // #  Get the lepton  #
+    // ####################        
+
+    TLorentzVector lepton_p;
+    if (sel.GetMuonsForAna().size()==1) 
+        lepton_p = (sel.GetMuonsForAna()[0]).p4;
+    else 
+        lepton_p = (sel.GetElectronsForAna()[0]).p4;
+ 
+    // ################
+    // #  Fill W-tag  #
+    // ################         
+
+    myEvent.nWTag = 0;
+    std::vector<IPHCTree::NTJet> WCand = sel.GetHeavyTagJets();
+    for (unsigned int i = 0 ; i < WCand.size() ; i++)
+    {
+        // Pt
+        if (WCand[i].p4.Pt() < 200) continue;
+
+        // Mass window
+        if ((WCand[i].p4.M() < 60) || (WCand[i].p4.M() > 100)) continue;
+
+        // Lepton overlap removal
+        if (WCand[i].p4.DeltaR(lepton_p) < 0.6) continue; 
+
+        // Mass drop
+        float mu = 999.0;
+        if (WCand[i].subjets.size() == 1)
+        {
+            mu = WCand[i].subjets[0].p4.M() / WCand[i].p4.M();
+        }
+        else if (WCand[i].subjets.size() == 2)
+        {
+            if (WCand[i].subjets[0].p4.M() > WCand[i].subjets[1].p4.M())
+                mu = WCand[i].subjets[0].p4.M() / WCand[i].p4.M();
+            else 
+                mu = WCand[i].subjets[1].p4.M() / WCand[i].p4.M();
+        }
+
+        if (mu > 0.5) continue;
+
+        myEvent.nWTag += 1.0;
+    }
+
     // ###############################
     // #  Add the event to the tree  #
     // ###############################
