@@ -10,6 +10,7 @@ typedef struct
 {
     Float_t mStop;
     Float_t mNeutralino;
+    Float_t nMCLepton;
     
     Float_t nJets;
     Float_t nBTag;
@@ -30,7 +31,7 @@ typedef struct
 //                       ############################################
 //                       #            Keep me updated !             #
 //                       ############################################
-#define MICROEVENT_FORMATROOT "mStop:mNeutralino:nJets:nBTag:nWTag:MT:MET:MT2W:dPhiMETjet:HTratio:HadronicChi2:weight"
+#define MICROEVENT_FORMATROOT "mStop:mNeutralino:nMCLepton:nJets:nBTag:nWTag:MT:MET:MT2W:dPhiMETjet:HTratio:HadronicChi2:weight"
 
 #endif
 
@@ -100,6 +101,7 @@ Bool_t MicroTuple_ProofJob::Process(Long64_t entry)
     // #  Fill jets info  #
     // ####################
 
+    myEvent.nMCLepton    = nMCLepton; 
     myEvent.nJets        = sel.GetJetsForAna().size();
     myEvent.nBTag        = sel.GetBJetsForAna().size();
     myEvent.MT           = sel.MT_wleptonic();
