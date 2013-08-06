@@ -145,8 +145,8 @@ int main(int argc, char* argv[])
   cout << "                .-T |   _                        " << endl;
   cout << "                | | |  / |                       " << endl;
   cout << "                | | | / /`|                      " << endl;
-  cout << "                 _  | | |/ / /                   " << endl;
-  cout << "                 \\`\\| \'.\' / /                " << endl;
+  cout << "             _  | | |/ / /                       " << endl;
+  cout << "             \\`\\| \'.\' / /                    " << endl;
   cout << "              \\ \\`-. \'--|                     " << endl;
   cout << "               \\    \'   |                      " << endl;
   cout << "                \\ \\  .` /                      " << endl;
