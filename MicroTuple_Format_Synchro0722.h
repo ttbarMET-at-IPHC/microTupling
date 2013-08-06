@@ -136,6 +136,7 @@ Bool_t MicroTuple_ProofJob::Process(Long64_t entry)
     // ######################
 
     TLorentzVector lepton_p;
+    float lepton_charge;
     int lepton_type;
     float lepton_iso;
     float lepton_PFPt;
@@ -146,13 +147,14 @@ Bool_t MicroTuple_ProofJob::Process(Long64_t entry)
         if (lepton_p.Pt() > (sel.GetMuonsForAna()[i]).p4.Pt()) continue;
         
         lepton_p = (sel.GetMuonsForAna()[i]).p4;
+        lepton_charge = (sel.GetMuonsForAna()[i]).charge;
         lepton_type = 13;
 
         float pfIsoCharged = (sel.GetMuonsForAna()[i]).isolation["PF03Char"];
         float pfIsoNeutral = (sel.GetMuonsForAna()[i]).isolation["PF03Neut"];
         float pfIsoPhoton  = (sel.GetMuonsForAna()[i]).isolation["PF03Phot"];
         float pfIsoPU      = (sel.GetMuonsForAna()[i]).isolation["PF03PU"];
-        lepton_iso = pfIsoCharged + max(0., pfIsoNeutral + pfIsoPhoton- 0.5*pfIsoPU); 
+        lepton_iso = (pfIsoCharged + max(0., pfIsoNeutral + pfIsoPhoton- 0.5*pfIsoPU)) / lepton_p.Pt(); 
 
         lepton_PFPt = (sel.GetMuonsForAna()[i]).bestMatch_pT;
         lepton_Epin = -9999.0;
@@ -162,6 +164,7 @@ Bool_t MicroTuple_ProofJob::Process(Long64_t entry)
         if (lepton_p.Pt() > (sel.GetElectronsForAna()[i]).p4.Pt()) continue;
         
         lepton_p = (sel.GetElectronsForAna()[i]).p4;
+        lepton_charge = (sel.GetElectronsForAna()[i]).charge;
         lepton_type = 11;
         
         float chargedIso  = (sel.GetElectronsForAna()[i]).isolation["RA4Charg"];
@@ -169,7 +172,7 @@ Bool_t MicroTuple_ProofJob::Process(Long64_t entry)
         float neutralIso  = (sel.GetElectronsForAna()[i]).isolation["RA4Neutr"];
         float rho_relIso  = (sel.GetElectronsForAna()[i]).isolation["rho"];
         float Aeff_relIso = (sel.GetElectronsForAna()[i]).isolation["Aeff"];
-        lepton_iso = chargedIso + max((float) 0.0,(float) (photonIso + neutralIso - rho_relIso * Aeff_relIso));
+        lepton_iso = (chargedIso + max((float) 0.0,(float) (photonIso + neutralIso - rho_relIso * Aeff_relIso))) / lepton_p.Pt();
         
         lepton_PFPt = (sel.GetElectronsForAna()[i]).bestMatch_pT;
 	    lepton_Epin = (sel.GetElectronsForAna()[i]).eSuperClusterOverP;
@@ -181,6 +184,7 @@ Bool_t MicroTuple_ProofJob::Process(Long64_t entry)
     myEvent.leptonE      = lepton_p.E();
     myEvent.leptonPDG    = lepton_type;
     myEvent.leptonIso    = lepton_iso;
+    myEvent.leptonEpin    = lepton_Epin;
     myEvent.leptonPFPt   = lepton_PFPt;
     
     // #####################################
@@ -199,13 +203,8 @@ Bool_t MicroTuple_ProofJob::Process(Long64_t entry)
     // #  Fill veto info  #
     // ####################
     
-    myEvent.isoTrackVeto = 0.0;
-    myEvent.tauVeto = 0.0;
-    
-    if (selection_lastStep >= 6)
-        myEvent.isoTrackVeto = 1.0;
-    if (selection_lastStep >= 7)
-        myEvent.tauVeto = 1.0;
+    myEvent.isoTrackVeto = sel.GetSUSYstopIsolatedTrackVeto(lepton_p,lepton_charge);
+    myEvent.tauVeto = sel.GetSUSYstopTauVeto(lepton_p,lepton_charge);
     
     // ###############################
     // #  Add the event to the tree  #
