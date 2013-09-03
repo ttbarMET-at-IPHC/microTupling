@@ -14,3 +14,9 @@
 
 # Root files
 *.root
+
+# Various stuff not needed to be versionned
+.list_*
+NTAna
+*.d
+MicroTuple_ProofLauncher
