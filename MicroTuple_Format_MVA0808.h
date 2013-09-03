@@ -24,14 +24,14 @@ typedef struct
     Float_t HTratio;
     Float_t HadronicChi2;
     
-    Float_t weight;
+    Float_t trueNumberOfEvents;
     
 } microEvent;
 
 //                       ############################################
 //                       #            Keep me updated !             #
 //                       ############################################
-#define MICROEVENT_FORMATROOT "mStop:mNeutralino:nMCLepton:nJets:nBTag:nWTag:MT:MET:MT2W:dPhiMETjet:HTratio:HadronicChi2:weight"
+#define MICROEVENT_FORMATROOT "mStop:mNeutralino:nMCLepton:nJets:nBTag:nWTag:MT:MET:MT2W:dPhiMETjet:HTratio:HadronicChi2:trueNumberOfEvents"
 
 #endif
 
@@ -84,18 +84,14 @@ Bool_t MicroTuple_ProofJob::Process(Long64_t entry)
         myEvent.mStop       = stopMCinfo->GetStopMass();
         myEvent.mNeutralino = stopMCinfo->GetNeutralinoMass();
         if (myEvent.mStop - myEvent.mNeutralino < 500) return false;
-        myEvent.weight      = stopCrossSection(myEvent.mStop) * 20000.0 / 54000.0;
     }
     else
     {
         myEvent.mStop       = -1;
         myEvent.mNeutralino = -1;
-        
-             if (dataset->Name() == "ttbar")  myEvent.weight = 225.2  * 20000.0 / (21675970.0 + 6474753.0);
-        else if (dataset->Name() == "W2Jets") myEvent.weight = 2159.0 * 20000.0 / 34044921.0;
-        else if (dataset->Name() == "W3Jets") myEvent.weight = 640.0  * 20000.0 / 15539503.0;
-        else if (dataset->Name() == "W4Jets") myEvent.weight = 264.0  * 20000.0 / 13382803.0;
     }
+        
+    myEvent.trueNumberOfEvents = dataset->getNumberOfEventsBeforeMTSkimmer();
 
     // ####################
     // #  Fill jets info  #
@@ -110,7 +106,7 @@ Bool_t MicroTuple_ProofJob::Process(Long64_t entry)
     myEvent.MT2W         = sel.MT2W();
     myEvent.dPhiMETjet   = sel.DPhi_MET_leadingJets(); 
     myEvent.HTratio      = sel.HT_ratio();
-    myEvent.HadronicChi2 = sel.HadronicChi2();
+    myEvent.HadronicChi2 = sel.HadronicChi2(dataset->isData());
 
     // ####################
     // #  Get the lepton  #
@@ -139,21 +135,8 @@ Bool_t MicroTuple_ProofJob::Process(Long64_t entry)
         // Lepton overlap removal
         if (WCand[i].p4.DeltaR(lepton_p) < 0.6) continue; 
 
-        // Mass drop
-        float mu = 999.0;
-        if (WCand[i].subjets.size() == 1)
-        {
-            mu = WCand[i].subjets[0].p4.M() / WCand[i].p4.M();
-        }
-        else if (WCand[i].subjets.size() == 2)
-        {
-            if (WCand[i].subjets[0].p4.M() > WCand[i].subjets[1].p4.M())
-                mu = WCand[i].subjets[0].p4.M() / WCand[i].p4.M();
-            else 
-                mu = WCand[i].subjets[1].p4.M() / WCand[i].p4.M();
-        }
-
-        if (mu > 0.5) continue;
+        // Subjetiness ratio
+        if (WCand[i].others["tau2"] / WCand[i].others["tau1"] > 0.5) continue;
 
         myEvent.nWTag += 1.0;
     }
