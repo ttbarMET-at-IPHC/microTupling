@@ -30,7 +30,7 @@ Recompile(){
 }
 
 ############################################################
-##   Functions needed to deal with multiple librairies
+##   Functions needed to deal with multiple librairies   ###
 ############################################################
 
 # The function will write the list in .list_lib_ordered
@@ -41,8 +41,8 @@ rm .list_lib
 for i in `cat .list_processes`;
 do
 	if [[ -e /proc/$i/maps ]]; then
-		grep libNTupleAna /proc/$i/maps | awk '{print $6}' >> .list_lib
-		grep libNTuple /proc/$i/maps | awk '{print $6}' >> .list_lib
+		grep libNTupleAna /proc/$i/maps 2>/dev/null | awk '{print $6}' >> .list_lib
+		grep libNTuple /proc/$i/maps 2>/dev/null | awk '{print $6}' >> .list_lib
 	fi
 done
 sort -u .list_lib > .list_lib_ordered
@@ -81,12 +81,6 @@ RemoveUselessLib(){
 
 if [ $# -lt 1 ] ; then echo "No arguments given" ; Help ; exit ; fi
 
-#echo "###############################"
-#echo " 		COMPILE		     "
-#echo "###############################"
-
-#echo "The path has been defined as: "$NTUPLEANA_PATH
-
 if [[ $NTUPLEANA_PATH == "" ]]; then
  	exit
 fi
@@ -120,13 +114,10 @@ done
 
 #ACTIONS
 if [[ $recompile == "true" ]] ; then 
-	#echo "###############################"
 	echo "  "
 	echo "  ,----------------------------------,"
     echo "  |   Recompiling analysis package   |"
-	echo "  \`----------------------------------\`"
-	#echo "###############################"
-    
+	echo "  \`----------------------------------'"
     echo " "
     echo "  > Remove useless librairies ..."
     echo " "
@@ -141,7 +132,6 @@ if [[ $recompile == "true" ]] ; then
 	latest=`ls -ltrh ../../../.lib/ | tail -1 | awk '{print $9}'`
 	ln -s ../../.lib/$latest ../../../.lib/libNTupleAna.so
 
-	#echo "###############################"
     echo " "
 	if [ $code -eq 0 ] ; then
   		echo "  > Compilation worked !"
@@ -150,23 +140,33 @@ if [[ $recompile == "true" ]] ; then
 		exit;
 	fi
     echo " "
-	#echo "###############################"
 fi
 
 if [[ $src != "" ]] ; then 
-	#echo "###############################"
 	echo "  ,---------------------,"
     echo "  |   Compiling macro   |"
-	echo "  \`---------------------\`"
+	echo "  \`---------------------'"
 	echo "  "
-	#echo "###############################"
 	execFile=`echo $src | awk -F '.' '{print $1}'`
 	CurrLib=`LatestLib`
         echo $NTUPLEANA_PATH
-	g++  -l:$NTUPLEANA_PATH/../../../IPHCDataFormat/NTFormat/src/libNTuple.so -l:$NTUPLEANA_PATH/../libNTupleAna.so -I `root-config --incdir` -I $NTUPLEANA_PATH/../ -I ../sonicScrewdriver -l:$PWD/../sonicScrewdriver/libSonicScrewdriver.so -I $NTUPLEANA_PATH/../../../IPHCDataFormat/ -L $ROOTSYS/lib -lGenVector -lCore -lCint -lRIO -lNet -lHist -lGraf -lGraf3d -lGpad -lTree -lRint -lPostscript -lMatrix -lPhysics -lMathCore -lThread -pthread -lm -ldl -rdynamic -lProof -lProofPlayer -lMinuit -lMinuit2 $src -o $execFile
-	#g++  -l:$NTUPLEANA_PATH/../../../IPHCDataFormat/NTFormat/src/libNTuple.so -l:$NTUPLEANA_PATH/../libNTupleAna.so -I `root-config --incdir` -I $NTUPLEANA_PATH/../ -I $NTUPLEANA_PATH/../../../IPHCDataFormat/ -L $ROOTSYS/lib -lGenVector -lCore -lCint -lRIO -lNet -lHist -lGraf -lGraf3d -lGpad -lTree -lRint -lPostscript -lMatrix -lPhysics -lMathCore -lThread -pthread -lm -ldl -rdynamic -lProof -lProofPlayer $src -o $execFile
+
+	g++  -l:$NTUPLEANA_PATH/../../../IPHCDataFormat/NTFormat/src/libNTuple.so \
+         -l:$NTUPLEANA_PATH/../libNTupleAna.so                                \
+         -I `root-config --incdir` -I $NTUPLEANA_PATH/../                     \
+         -I ../sonicScrewdriver                                               \
+         -l:$PWD/../sonicScrewdriver/libSonicScrewdriver.so                   \
+         -I $NTUPLEANA_PATH/../../../IPHCDataFormat/                          \
+         -L $ROOTSYS/lib                                                      \
+         -lGenVector -lCore -lCint -lRIO -lNet -lHist -lGraf                  \
+         -lGraf3d -lGpad -lTree -lRint -lPostscript -lMatrix                  \
+         -lPhysics -lMathCore -lThread                                        \
+         -pthread -lm -ldl -rdynamic                                          \
+         -lProof -lProofPlayer -lTMVA                                         \
+         -lMinuit -lMinuit2                                                   \
+         $src -o $execFile                                                    
+
  	code=$?
-	#echo "###############################"
     echo " "
 	if [ $code -eq 0 ] ; then
   		echo "  > Compilation worked !"
@@ -175,14 +175,11 @@ if [[ $src != "" ]] ; then
 		exit;
 	fi
     echo " "
-	#echo "###############################"
     echo " "
 	if [[ $execute == "true" ]] ; then 
-		#echo "###############################"
 		echo "  ,---------------------,"
         echo "  |   Executing macro   |"
-		echo "  \`---------------------\`"
-		#echo "###############################"
+		echo "  \`---------------------'"
 		./$execFile
 	fi
 fi
