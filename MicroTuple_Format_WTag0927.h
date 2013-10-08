@@ -261,9 +261,8 @@ Bool_t MicroTuple_ProofJob::Process(Long64_t entry)
         int quark2FromGenW_Index = -1;
         for (unsigned int i = 0 ; i < MCParticles.size() ; i++)  
         {
-            if (MCParticles[i].motherIndex_ == -1) continue;
             if (i == quark1FromGenW_Index) continue;
-            if (MCParticles[i].motherIndex_ == genW_index)
+            if (MCParticles[i].motherIndex_ == genW_Index)
             {
                 quark2FromGenW_Index = i;
                 break;
@@ -288,11 +287,11 @@ Bool_t MicroTuple_ProofJob::Process(Long64_t entry)
             myEvent.genW_Eta = 999.0;
             myEvent.genW_Phi = 999.0;
             myEvent.q1_pT    = -1;
-            myEvent.q1_Eta   = 999.0
-            myEvent.q1_Phi   = 999.0
-            myEvent.q2_pT    = -1
-            myEvent.q2_Eta   = -999.0
-            myEvent.q2_Phi   = 999.0
+            myEvent.q1_Eta   = 999.0;
+            myEvent.q1_Phi   = 999.0;
+            myEvent.q2_pT    = -1;
+            myEvent.q2_Eta   = -999.0;
+            myEvent.q2_Phi   = 999.0;
         }
 
     // Loop on W-candidate collection
